@@ -84,17 +84,6 @@ uses Math;
     {$R *.lfm}
 {$EndIf}
 
-function RandomRay(): TVec3;
-var theta, cosphi, sinphi: Single;
-begin
-  theta := 2 * Pi * Random;
-  cosphi := 1 - 2 * Random;
-  sinphi := sqrt(1 - min(1.0, sqr(cosphi)));
-  Result.x := sinphi * cos(theta);
-  Result.y := sinphi * sin(theta);
-  Result.z := cosphi;
-end;
-
 procedure TfrmMain.ApplicationIdle(Sender: TObject; var Done: Boolean);
 begin
   Done := False;
@@ -116,10 +105,10 @@ begin
   FFBO_Resolved := Create_FrameBuffer(FMain, [TTextureFormat.RGBA], [true]);
 
   FProg := TavProgram.Create(FMain);
-  FProg.Load('PBR', False, 'PBRShaders\!Out');
+  FProg.Load('PBR', True, 'PBRShaders\!Out');
 
   FProgResolve := TavProgram.Create(FMain);
-  FProgResolve.Load('PBR_Resolve', False, 'PBRShaders\!Out');
+  FProgResolve.Load('PBR_Resolve', True, 'PBRShaders\!Out');
 
   FQuad := GenQuad_VB(FMain, Vec(-1,-1,1,1));
 
@@ -161,9 +150,7 @@ end;
 procedure TfrmMain.LoadEnviromentMap;
 begin
   FEnviroment := TavTexture.Create(FMain);
-  FEnviroment.TexData := LoadTexture('radiance.dds');
-  //FEnviroment.TexData := LoadTexture('Snow.dds');
-  //FEnviroment.TargetFormat := TTextureFormat.DXT3;
+  FEnviroment.TexData := LoadTexture('..\Data\radiance.dds');
   FEnviroment.TargetFormat := TTextureFormat.RGBA16f;
   FEnviroment.sRGB := True;
 end;
@@ -178,7 +165,7 @@ var i: Integer;
 begin
   SetLength(Result, ACount);
   for i := 0 to ACount - 1 do
-    Result[i] := Vec(RandomRay(), 1.0);
+    Result[i] := Vec(RandomSphereUniformRay(), 1.0);
 end;
 
 procedure TfrmMain.LoadModel;
@@ -191,7 +178,7 @@ var meshes: IavMeshes;
 begin
   FMaterials := TMaterialArr.Create;
 
-  avMesh.LoadFromFile('sphere.avm', meshes, meshInstances);
+  avMesh.LoadFromFile('..\Data\sphere.avm', meshes, meshInstances);
 
   //clone to several meshes and assign different materials
   tmpInstances := TavMeshInstanceArray.Create;
@@ -223,14 +210,6 @@ begin
     end;
   end;
   FModels := FCollection.AddFromMeshInstances(tmpInstances);
-
-//  avMesh.LoadFromFile('..\Media\Statue\statue.avm', meshes, meshInstances);
-//  material.albedo := Vec(0.01, 0.01, 0.01);
-//  material.f0 := Vec(255, 219, 145) * (1/255.0);
-//  material.roughness := 0.5;
-//  for x := 0 to meshInstances.Count - 1 do
-//    FMaterials.Add(material);
-//  FModels := FCollection.AddFromMeshInstances(meshInstances);
 end;
 
 procedure TfrmMain.RenderScene;

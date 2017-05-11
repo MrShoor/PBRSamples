@@ -33,6 +33,5 @@ PS_Output PS (VS_Output In) {
         Out.Color /= Out.Color.a;
     else
         Out.Color = 0.0;
-    if (Out.Color.r > 1.05) Out.Color.gb = 0.0;
     return Out;
 }

@@ -10,7 +10,6 @@ uses
   LCLType, LCLIntf,
   {$EndIf}
   SysUtils, Variants, Classes, Graphics,
-  Generics.Collections, Generics.Defaults,
   Controls, Forms, Dialogs,
   avRes, avContnrs, avTess, avTypes, avMesh, avModel, avCameraController, avTexLoader, avUtils,
   mutils;
@@ -87,63 +86,6 @@ uses Math;
     {$R *.lfm}
 {$EndIf}
 
-function RandomRay(): TVec3;
-var theta, cosphi, sinphi: Single;
-begin
-  theta := 2 * Pi * Random;
-  cosphi := 1 - 2 * Random;
-  sinphi := sqrt(1 - min(1.0, sqr(cosphi)));
-  Result.x := sinphi * cos(theta);
-  Result.y := sinphi * sin(theta);
-  Result.z := cosphi;
-end;
-
-function HammersleyPoint(const I, N: Integer): TVec2;
-  function radicalInverse_VdC(bits: Cardinal): Single;
-  begin
-    bits := (bits shl 16) or (bits shr 16);
-    bits := ((bits and $55555555) shl 1) or ((bits and $AAAAAAAA) shr 1);
-    bits := ((bits and $33333333) shl 2) or ((bits and $CCCCCCCC) shr 2);
-    bits := ((bits and $0F0F0F0F) shl 4) or ((bits and $F0F0F0F0) shr 4);
-    bits := ((bits and $00FF00FF) shl 8) or ((bits and $FF00FF00) shr 8);
-    Result := bits * 2.3283064365386963e-10;
-  end;
-begin
-  Result.x := I/N;
-  Result.y := radicalInverse_VdC(I);
-end;
-
-function GenerateHammersleyPts(const N: Integer): TVec4Arr;
-var E: TVec2;
-    I: Integer;
-    offset: TVec2;
-begin
-  offset.x := Random/N;
-  offset.y := Random/N;
-
-  SetLength(Result, N);
-  for I := 0 to N-1 do
-  begin
-    E := HammersleyPoint(I, N);
-    //E := E + offset;
-    if E.x > 1.0 then
-      E.x := E.x - 1.0;
-    if E.y > 1.0 then
-      E.y := E.y - 1.0;
-    Result[i].xy := E;
-    Result[i].z := 0;
-    Result[i].w := 0;
-  end;
-//    TArray.Sort<TVec4>(Result,
-//      TDelegatedComparer<TVec4>.Create(
-//        function (const Left, Right: TVec4): Integer
-//        begin
-//          Result := -sign(Right.y - Left.y);
-//        end
-//      )
-//    );
-end;
-
 procedure TfrmMain.ApplicationIdle(Sender: TObject; var Done: Boolean);
 begin
   Done := False;
@@ -165,10 +107,10 @@ begin
   FFBO_Resolved := Create_FrameBuffer(FMain, [TTextureFormat.RGBA], [true]);
 
   FProg := TavProgram.Create(FMain);
-  FProg.Load('PBR', False, 'PBRShaders\!Out');
+  FProg.Load('PBR', True, 'PBRShaders\!Out');
 
   FProgResolve := TavProgram.Create(FMain);
-  FProgResolve.Load('PBR_Resolve', False, 'PBRShaders\!Out');
+  FProgResolve.Load('PBR_Resolve', True, 'PBRShaders\!Out');
 
   FQuad := GenQuad_VB(FMain, Vec(-1,-1,1,1));
 
@@ -210,15 +152,13 @@ end;
 procedure TfrmMain.LoadEnviromentMap;
 begin
   FIrradiance := TavTexture.Create(FMain);
-  FIrradiance.TexData := LoadTexture('irradiance.dds');
+  FIrradiance.TexData := LoadTexture('..\Data\irradiance.dds');
   FIrradiance.TargetFormat := TTextureFormat.RGBA16f;
   FIrradiance.AutoGenerateMips := True;
 
   FRadiance := TavTexture.Create(FMain);
-  FRadiance.TexData := LoadTexture('radiance.dds');
-  //FRadiance.TexData := LoadTexture('snow.dds');
+  FRadiance.TexData := LoadTexture('..\Data\radiance.dds');
   FRadiance.TargetFormat := TTextureFormat.RGBA16f;
-  //FRadiance.TargetFormat := TTextureFormat.DXT3;
   FRadiance.sRGB := True;
 end;
 
@@ -245,7 +185,7 @@ var meshes: IavMeshes;
 begin
   FMaterials := TMaterialArr.Create;
 
-  avMesh.LoadFromFile('sphere.avm', meshes, meshInstances);
+  avMesh.LoadFromFile('..\Data\sphere.avm', meshes, meshInstances);
 
   //clone to several meshes and assign different materials
   tmpInstances := TavMeshInstanceArray.Create;
@@ -277,14 +217,6 @@ begin
     end;
   end;
   FModels := FCollection.AddFromMeshInstances(tmpInstances);
-
-//  avMesh.LoadFromFile('statue.avm', meshes, meshInstances);
-//  material.albedo := Vec(0.01, 0.01, 0.01);
-//  material.f0 := Vec(255, 219, 145) * (1/255.0);
-//  material.roughness := 0.25;
-//  for x := 0 to meshInstances.Count - 1 do
-//    FMaterials.Add(material);
-//  FModels := FCollection.AddFromMeshInstances(meshInstances);
 end;
 
 procedure TfrmMain.RenderScene;
@@ -302,9 +234,6 @@ begin
     //generate random samples
     //if FHammersleyPts = nil then
       FHammersleyPts := GenerateHammersleyPts(16);
-      //FHammersleyPts := GenerateHammersleyPts(1);
-      //FHammersleyPts := GenerateHammersleyPts(1024);
-    //FHammersleyPts := GenerateRandomSamples(1024);
 
     //cumulative render
     FMain.States.Blending[0] := True;

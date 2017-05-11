@@ -76,7 +76,7 @@ begin
 
   FFBO := Create_FrameBuffer(FMain, [TTextureFormat.RGBA, TTextureFormat.D32f], [true, false]);
   FProg := TavProgram.Create(FMain);
-  FProg.Load('PBR', False, 'PBRShaders\!Out');
+  FProg.Load('PBR', True, 'PBRShaders\!Out');
 
   FCollection := TavModelCollection.Create(FMain);
 
@@ -127,7 +127,7 @@ var meshes: IavMeshes;
 begin
   FMaterials := TMaterialArr.Create;
 
-  avMesh.LoadFromFile('sphere.avm', meshes, meshInstances);
+  avMesh.LoadFromFile('..\Data\sphere.avm', meshes, meshInstances);
 
   //clone to several meshes and assign different materials
   tmpInstances := TavMeshInstanceArray.Create;
