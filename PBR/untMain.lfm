@@ -1,0 +1,16 @@
+object frmMain: TfrmMain
+  Left = 0
+  Height = 624
+  Top = 0
+  Width = 1074
+  Caption = 'frmMain'
+  Color = clBtnFace
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnKeyPress = FormKeyPress
+  OnPaint = FormPaint
+  LCLVersion = '1.6.4.0'
+end

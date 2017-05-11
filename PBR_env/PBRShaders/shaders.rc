@@ -1,0 +1,2 @@
+DX_PBR RCDATA "!Out\DX_PBR.hlsl"
+DX_PBR_Resolve RCDATA "!Out\DX_PBR_Resolve.hlsl"
